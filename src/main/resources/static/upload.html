@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZoneDrop Uploads</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body data-page="upload">
+<div class="shell">
+    <header class="topbar">
+        <a class="brand" href="/dashboard.html">ZoneDrop</a>
+        <nav class="nav">
+            <a href="/dashboard.html">Dashboard</a>
+            <a href="/users.html">Users</a>
+            <a href="/nearby.html">Map</a>
+        </nav>
+        <div class="nav-actions">
+            <span id="auth-user-pill" class="user-pill"></span>
+            <button id="logout-button" type="button" class="button secondary">Logout</button>
+        </div>
+    </header>
+
+    <section class="page-intro">
+        <span class="eyebrow">File Upload</span>
+        <h1>Upload a file for a user and browse all uploads.</h1>
+        <p>The page keeps the same blue system theme and uses the saved JWT for upload and listing requests.</p>
+    </section>
+
+    <section class="grid-2">
+        <article class="panel">
+            <h2>Upload File</h2>
+            <form id="upload-form">
+                <div class="field">
+                    <label for="upload-user-id">User</label>
+                    <select id="upload-user-id" name="userId" required></select>
+                </div>
+                <div class="field">
+                    <label for="file">File</label>
+                    <input id="file" name="file" type="file" required>
+                </div>
+                <div class="actions">
+                    <button type="submit">Upload File</button>
+                </div>
+                <div id="upload-status" class="status"></div>
+            </form>
+        </article>
+
+        <article class="panel">
+            <h2>What Happens</h2>
+            <p>Each upload is tied to a user ID, written to Supabase Storage, and exposed through the protected file catalog.</p>
+        </article>
+    </section>
+
+    <section class="panel section-gap">
+        <h2>All Uploaded Files</h2>
+        <div id="all-files-list" class="list"></div>
+    </section>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>

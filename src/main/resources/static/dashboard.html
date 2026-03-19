@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZoneDrop Dashboard</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body data-page="dashboard">
+<div class="shell">
+    <header class="topbar">
+        <a class="brand" href="/dashboard.html">ZoneDrop</a>
+        <nav class="nav">
+            <a href="/dashboard.html">Dashboard</a>
+            <a href="/users.html">Users</a>
+            <a href="/upload.html">Uploads</a>
+            <a href="/nearby.html">Map</a>
+        </nav>
+        <div class="nav-actions">
+            <span id="auth-user-pill" class="user-pill"></span>
+            <button id="logout-button" type="button" class="button secondary">Logout</button>
+        </div>
+    </header>
+
+    <section class="hero">
+        <article class="hero-copy panel">
+            <span class="eyebrow">Authenticated Control Room</span>
+            <h1>Operate users, uploads, and nearby discovery from one secured client.</h1>
+            <p>
+                This dashboard uses the JWT returned by the backend auth APIs. Once signed in, the browser
+                attaches your token to every protected ZoneDrop request.
+            </p>
+            <div class="actions">
+                <a class="button" href="/users.html">Manage Users</a>
+                <a class="button secondary" href="/nearby.html">Open Map</a>
+            </div>
+        </article>
+
+        <div class="grid-2">
+            <article class="stat-card">
+                <span class="eyebrow">Users</span>
+                <h2>Create, store, and locate</h2>
+                <p>Register users, set live coordinates, and persist location data for nearby search.</p>
+            </article>
+            <article class="stat-card">
+                <span class="eyebrow">Files</span>
+                <h2>Blue-themed upload workflow</h2>
+                <p>Upload files against users and retrieve download links through the protected catalog.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="grid-3">
+        <article class="feature-card">
+            <span class="eyebrow">Feature 1</span>
+            <h2>User Operations</h2>
+            <p>Create users and maintain their live location coordinates used by Redis geo search.</p>
+            <div class="actions">
+                <a class="button" href="/users.html">Go to Users</a>
+            </div>
+        </article>
+
+        <article class="feature-card">
+            <span class="eyebrow">Feature 2</span>
+            <h2>File Distribution</h2>
+            <p>Push files into storage and browse the full platform catalog in the same interface.</p>
+            <div class="actions">
+                <a class="button" href="/upload.html">Go to Uploads</a>
+            </div>
+        </article>
+
+        <article class="feature-card">
+            <span class="eyebrow">Feature 3</span>
+            <h2>Nearby Radar</h2>
+            <p>Search within a radius, visualize nearby users, and inspect files directly on the map.</p>
+            <div class="actions">
+                <a class="button" href="/nearby.html">Go to Map</a>
+            </div>
+        </article>
+    </section>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>

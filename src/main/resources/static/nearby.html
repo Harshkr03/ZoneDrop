@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZoneDrop Map</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    >
+</head>
+<body data-page="nearby">
+<div class="shell">
+    <header class="topbar">
+        <a class="brand" href="/dashboard.html">ZoneDrop</a>
+        <nav class="nav">
+            <a href="/dashboard.html">Dashboard</a>
+            <a href="/users.html">Users</a>
+            <a href="/upload.html">Uploads</a>
+        </nav>
+        <div class="nav-actions">
+            <span id="auth-user-pill" class="user-pill"></span>
+            <button id="logout-button" type="button" class="button secondary">Logout</button>
+        </div>
+    </header>
+
+    <section class="page-intro">
+        <span class="eyebrow">Nearby Search</span>
+        <h1>Find nearby users and inspect their files on the map.</h1>
+        <p>Select a user as the search origin, choose a radius, and inspect protected file links through the same signed-in session.</p>
+    </section>
+
+    <section class="grid-2">
+        <article class="panel">
+            <h2>Search Controls</h2>
+            <form id="nearby-form">
+                <div class="field">
+                    <label for="nearby-user-id">User Name</label>
+                    <select id="nearby-user-id" name="userId" required></select>
+                </div>
+                <div id="selected-user-info" class="card"></div>
+                <div class="field">
+                    <label for="radius-km">Radius (km)</label>
+                    <input id="radius-km" name="radiusKm" type="number" step="any" value="1" required>
+                </div>
+                <div class="actions">
+                    <button type="submit">Find Nearby Users</button>
+                </div>
+                <div id="nearby-status" class="status"></div>
+            </form>
+        </article>
+
+        <article class="panel">
+            <h2>Map Legend</h2>
+            <div class="legend">
+                <span class="origin">Selected origin user</span>
+                <span class="nearby">Nearby users</span>
+            </div>
+            <p>The radius is drawn as a circle. Click a marker to inspect nearby user files and download links.</p>
+        </article>
+    </section>
+
+    <section class="panel section-gap">
+        <h2>Nearby Users Map</h2>
+        <div id="nearby-map" class="map"></div>
+    </section>
+
+    <section class="panel section-gap">
+        <h2>Nearby Users List</h2>
+        <div id="nearby-results" class="list">
+            <div class="empty">Run a nearby search to populate the map and file list.</div>
+        </div>
+    </section>
+</div>
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+></script>
+<script src="/app.js"></script>
+</body>
+</html>
