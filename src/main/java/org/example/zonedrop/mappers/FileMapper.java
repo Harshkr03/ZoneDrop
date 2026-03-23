@@ -15,6 +15,10 @@ public class FileMapper {
                 .storageKey(file.getStorageKey())
                 .mimeType(file.getMimeType())
                 .sizeBytes(file.getSizeBytes())
+                .latitude(file.getLatitude())
+                .longitude(file.getLongitude())
+                .radiusKm(file.getRadiusKm())
+                .expiresAt(file.getExpiresAt())
                 .build();
     } 
 }

@@ -2,7 +2,8 @@ package org.example.zonedrop.dto;
 
 import java.time.LocalDateTime;
 
-public record FileCatalogResponseDto(
+public record NearbyFileResponseDto(
+    Long fileId,
     Long userId,
     String userName,
     String fileName,
@@ -11,6 +12,7 @@ public record FileCatalogResponseDto(
     Double latitude,
     Double longitude,
     Double radiusKm,
-    LocalDateTime expiresAt
+    LocalDateTime expiresAt,
+    Double distanceKm
 ) {
 }

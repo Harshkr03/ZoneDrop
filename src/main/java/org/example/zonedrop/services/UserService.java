@@ -95,6 +95,15 @@ public class UserService {
         return toUserLiveLocationResponse(savedLocation);
     }
 
+    public List<NearbyUserResponseDto> findUsersNearUser(Long userId, Double radiusKm) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        UserLiveLocation liveLocation = userLiveLocationRepository.findByUser(user)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                "User has no live location stored"));
+        return findUsersWithinRadius(liveLocation.getLatitude(), liveLocation.getLongitude(), radiusKm);
+    }
+
     public List<NearbyUserResponseDto> findUsersWithinRadius(Double latitude, Double longitude, Double radiusKm) {
         validateCoordinates(latitude, longitude);
         if (radiusKm == null || radiusKm <= 0) {

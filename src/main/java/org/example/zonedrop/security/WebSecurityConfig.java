@@ -30,8 +30,7 @@ public class WebSecurityConfig {
             .authenticationProvider(authenticationProvider())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/", "/index.html", "/dashboard.html", "/users.html", "/upload.html", "/nearby.html").permitAll()
-                .requestMatchers("/styles.css", "/app.js").permitAll()
+                .requestMatchers("/ws-zonedrop/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
