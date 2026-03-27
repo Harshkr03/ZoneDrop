@@ -1,5 +1,6 @@
 package org.example.zonedrop.dto;
 
+import java.time.LocalDateTime;
 import lombok.*;
 
 @Builder
@@ -9,6 +10,10 @@ public record FileResponseDto(
     String fileName,
     String storageKey,
     String mimeType,
-    Long sizeBytes
+    Long sizeBytes,
+    Double latitude,
+    Double longitude,
+    Double radiusKm,
+    LocalDateTime expiresAt
 ) {
 }

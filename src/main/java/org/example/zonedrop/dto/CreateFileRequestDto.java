@@ -14,4 +14,8 @@ public class CreateFileRequestDto {
 
     private Long userId;
     private MultipartFile file;
+    private Double latitude;
+    private Double longitude;
+    private Double radiusKm;
+    private Long ttlSeconds;
 }

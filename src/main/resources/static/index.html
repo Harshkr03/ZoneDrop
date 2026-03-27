@@ -1,97 +1,266 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZoneDrop Auth</title>
-    <link rel="stylesheet" href="/styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZoneDrop – Live Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e2e8f0; height: 100vh; overflow: hidden; }
+    #auth-screen { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: #0f1117; }
+    .auth-card { background: #1a1d27; border: 1px solid #2d3148; border-radius: 12px; padding: 36px 40px; width: 380px; box-shadow: 0 8px 32px rgba(0,0,0,.5); }
+    .auth-card h1 { font-size: 1.6rem; margin-bottom: 4px; color: #a78bfa; }
+    .auth-card p  { font-size: .85rem; color: #64748b; margin-bottom: 24px; }
+    .tab-row { display: flex; gap: 8px; margin-bottom: 18px; }
+    .tab-btn { flex: 1; padding: 8px; border: 1px solid #2d3148; border-radius: 6px; background: transparent; color: #94a3b8; cursor: pointer; font-size: .85rem; transition: all .2s; }
+    .tab-btn.active { background: #a78bfa; border-color: #a78bfa; color: #fff; font-weight: 600; }
+    label { display: block; font-size: .8rem; color: #94a3b8; margin-bottom: 4px; }
+    input[type=text], input[type=email], input[type=password] { width: 100%; padding: 10px 12px; background: #0f1117; border: 1px solid #2d3148; border-radius: 6px; color: #e2e8f0; font-size: .9rem; margin-bottom: 13px; outline: none; transition: border-color .2s; }
+    input:focus { border-color: #a78bfa; }
+    .btn-primary { width: 100%; padding: 11px; background: #7c3aed; border: none; border-radius: 6px; color: #fff; font-size: .9rem; font-weight: 600; cursor: pointer; transition: background .2s; }
+    .btn-primary:hover { background: #6d28d9; }
+    .btn-primary:disabled { background: #4c1d95; opacity: .6; cursor: not-allowed; }
+    #auth-error { color: #f87171; font-size: .82rem; margin-top: 10px; min-height: 18px; }
+    #app { display: none; flex-direction: column; height: 100vh; }
+    header { flex-shrink: 0; background: #13151f; border-bottom: 1px solid #2d3148; padding: 0 16px; height: 48px; display: flex; align-items: center; justify-content: space-between; }
+    .hdr-left { display: flex; align-items: center; gap: 14px; }
+    .app-title { font-size: 1rem; font-weight: 700; color: #a78bfa; letter-spacing: .03em; }
+    .user-chip { font-size: .78rem; background: #1e2235; border: 1px solid #2d3148; padding: 3px 10px; border-radius: 20px; color: #94a3b8; }
+    .user-chip span { color: #c4b5fd; font-weight: 600; }
+    .hdr-right { display: flex; align-items: center; gap: 10px; }
+    .ws-badge { font-size: .75rem; padding: 3px 10px; border-radius: 20px; background: #1e2235; border: 1px solid #2d3148; display: flex; align-items: center; gap: 5px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; }
+    .dot.on { background: #22c55e; }
+    #ctrl-strip { flex-shrink: 0; background: #13151f; border-bottom: 1px solid #2d3148; padding: 6px 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .ctrl-inp-group { display: flex; align-items: center; gap: 5px; }
+    .ctrl-inp-group span { font-size: .72rem; color: #64748b; white-space: nowrap; }
+    .ctrl-inp { width: 110px; padding: 4px 8px; background: #0f1117; border: 1px solid #2d3148; border-radius: 5px; color: #e2e8f0; font-size: .78rem; outline: none; }
+    .ctrl-inp:focus { border-color: #a78bfa; }
+    .ctrl-divider { width: 1px; height: 20px; background: #2d3148; margin: 0 2px; }
+    .btn-xs { padding: 4px 12px; border: none; border-radius: 5px; font-size: .75rem; font-weight: 600; cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .btn-xs:disabled { opacity: .4; cursor: not-allowed; }
+    .bg-green  { background: #166534; color: #4ade80; } .bg-green:hover:not(:disabled)  { background: #15803d; }
+    .bg-red    { background: #7f1d1d; color: #fca5a5; } .bg-red:hover:not(:disabled)    { background: #991b1b; }
+    .bg-purple { background: #4c1d95; color: #c4b5fd; } .bg-purple:hover:not(:disabled) { background: #5b21b6; }
+    .bg-gray   { background: #1e293b; color: #94a3b8; border: 1px solid #2d3148; } .bg-gray:hover:not(:disabled) { background: #2d3148; }
+    .loc-info { font-size: .72rem; color: #475569; margin-left: auto; }
+    #loc-badge { color: #f59e0b; } #loc-badge.ok { color: #4ade80; }
+    #body { flex: 1; display: flex; overflow: hidden; }
+    #map-wrap { flex: 1; position: relative; } #map { width: 100%; height: 100%; }
+    .leaflet-container { background: #1a1d27 !important; }
+    .leaflet-popup-content-wrapper { background: #1e2235 !important; border: 1px solid #2d3148 !important; color: #e2e8f0 !important; border-radius: 10px !important; }
+    .leaflet-popup-tip { background: #1e2235 !important; }
+    .leaflet-popup-content { margin: 10px 14px !important; font-size: .8rem; line-height: 1.6; }
+    #map-legend { position: absolute; bottom: 24px; left: 12px; z-index: 800; background: rgba(19,21,31,.92); border: 1px solid #2d3148; border-radius: 8px; padding: 10px 14px; font-size: .75rem; color: #94a3b8; pointer-events: none; }
+    #map-legend .leg-row { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+    #map-legend .leg-row:last-child { margin-bottom: 0; }
+    .leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    #side { width: 320px; flex-shrink: 0; border-left: 1px solid #2d3148; display: flex; flex-direction: column; }
+    .tab-bar { display: flex; border-bottom: 1px solid #2d3148; background: #13151f; flex-shrink: 0; }
+    .log-tab { flex: 1; padding: 8px 4px; font-size: .72rem; font-weight: 600; color: #475569; border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; text-transform: uppercase; letter-spacing: .04em; transition: all .15s; }
+    .log-tab.active { color: #a78bfa; border-bottom-color: #a78bfa; }
+    .tab-pane { display: none; flex: 1; overflow-y: auto; flex-direction: column; }
+    .tab-pane.active { display: flex; }
+    #nearby-list { padding: 10px; flex: 1; overflow-y: auto; }
+    .nearby-card { background: #1e2235; border: 1px solid #2d3148; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; transition: border-color .15s; }
+    .nearby-card:hover { border-color: #a78bfa; }
+    .nearby-card .nc-name { font-size: .85rem; font-weight: 600; color: #e2e8f0; margin-bottom: 2px; }
+    .nearby-card .nc-dist { font-size: .75rem; color: #f59e0b; }
+    .nearby-card .nc-coord { font-size: .7rem; color: #475569; margin-top: 3px; }
+    #nearby-empty { color: #475569; font-size: .8rem; text-align: center; padding: 24px 12px; }
+    .log { flex: 1; overflow-y: auto; padding: 8px 10px; font-family: 'Courier New', monospace; font-size: .72rem; }
+    .log-entry { padding: 4px 7px; border-radius: 4px; margin-bottom: 3px; border-left: 3px solid transparent; line-height: 1.45; }
+    .log-entry.location { border-color: #6366f1; background: rgba(99,102,241,.07); }
+    .log-entry.all      { border-color: #22c55e; background: rgba(34,197,94,.07); }
+    .log-entry.nearby   { border-color: #f59e0b; background: rgba(245,158,11,.07); }
+    .log-entry.system   { border-color: #3b82f6; background: rgba(59,130,246,.07); color: #93c5fd; }
+    .log-entry.error    { border-color: #ef4444; background: rgba(239,68,68,.07); color: #fca5a5; }
+    .log-entry.sent     { border-color: #8b5cf6; background: rgba(139,92,246,.07); color: #c4b5fd; }
+    .ts { color: #334155; margin-right: 5px; } .tl { color: #a78bfa; font-weight: 600; margin-right: 3px; }
+    .side-count { flex-shrink: 0; padding: 4px 10px; font-size: .68rem; color: #334155; border-top: 1px solid #1e2235; background: #13151f; }
+    ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #2d3148; border-radius: 3px; }
+    .mk-me, .mk-user, .mk-nearby { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; border: 2px solid; }
+    .mk-me     { background: rgba(124,58,237,.85); border-color: #a78bfa; animation: pulse   1.8s ease-out infinite; }
+    .mk-user   { background: rgba(34,197,94,.8);   border-color: #4ade80; }
+    .mk-nearby { background: rgba(245,158,11,.85); border-color: #fbbf24; animation: pulse-y 1.8s ease-out infinite; }
+    @keyframes pulse   { 0% { box-shadow: 0 0 0 2px rgba(167,139,250,.5); } 100% { box-shadow: 0 0 0 9px rgba(167,139,250,0); } }
+    @keyframes pulse-y { 0% { box-shadow: 0 0 0 2px rgba(251,191,36,.5);  } 100% { box-shadow: 0 0 0 9px rgba(251,191,36,0);  } }
+  </style>
 </head>
-<body data-page="auth">
-<div class="auth-shell">
-    <section class="auth-visual panel">
-        <div class="radar-stage">
-            <div class="radar-ring ring-1"></div>
-            <div class="radar-ring ring-2"></div>
-            <div class="radar-ring ring-3"></div>
-            <div class="crosshair crosshair-x"></div>
-            <div class="crosshair crosshair-y"></div>
-            <div class="center-pin">
-                <span></span>
-            </div>
-            <div class="signal-card signal-a">
-                <strong>SHARED FILE</strong>
-                <span>DesignSpecs.pdf</span>
-            </div>
-            <div class="signal-card signal-b">
-                <strong>NEARBY USER</strong>
-                <span>1.4 km away</span>
-            </div>
-            <div class="signal-card signal-c">
-                <strong>ACTIVE DROP</strong>
-                <span>Uploads synced</span>
-            </div>
-            <div class="beacon beacon-a"></div>
-            <div class="beacon beacon-b"></div>
-            <div class="beacon beacon-c"></div>
-            <div class="beacon beacon-d"></div>
-        </div>
-        <div class="visual-copy">
-            <h2>Local file exchange, location-first discovery, one secured control surface.</h2>
-            <p>ZoneDrop links nearby users, uploads, and geo search with JWT-protected APIs.</p>
-        </div>
-    </section>
+<body>
 
-    <section class="auth-panel panel">
-        <div class="auth-brand">
-            <span class="eyebrow">Zonedrop Network</span>
-            <h1>ZoneDrop</h1>
-            <p>Localized file sharing network with a light blue system theme.</p>
-        </div>
-
-        <div class="auth-tabs" role="tablist" aria-label="Authentication forms">
-            <button id="login-tab" class="auth-tab active" type="button" data-mode="login">Sign In</button>
-            <button id="signup-tab" class="auth-tab" type="button" data-mode="signup">Sign Up</button>
-        </div>
-
-        <form id="login-form" class="auth-form">
-            <div class="field">
-                <label for="login-email">Email</label>
-                <input id="login-email" name="email" type="email" placeholder="you@zonedrop.app" required>
-            </div>
-            <div class="field">
-                <label for="login-password">Password</label>
-                <input id="login-password" name="password" type="password" placeholder="Enter password" required>
-            </div>
-            <div class="actions">
-                <button type="submit" class="button wide">Sign In</button>
-            </div>
-            <div id="login-status" class="status"></div>
-        </form>
-
-        <form id="signup-form" class="auth-form hidden">
-            <div class="field">
-                <label for="signup-name">Name</label>
-                <input id="signup-name" name="name" type="text" placeholder="Aarav Mehta" required>
-            </div>
-            <div class="field">
-                <label for="signup-email">Email</label>
-                <input id="signup-email" name="email" type="email" placeholder="aarav@zonedrop.app" required>
-            </div>
-            <div class="field">
-                <label for="signup-password">Password</label>
-                <input id="signup-password" name="password" type="password" placeholder="Create password" required>
-            </div>
-            <div class="actions">
-                <button type="submit" class="button wide">Create Account</button>
-            </div>
-            <div id="signup-status" class="status"></div>
-        </form>
-
-        <div class="auth-footnote">
-            <span>After login, your JWT is stored in-browser and attached to every protected API request.</span>
-        </div>
-    </section>
+<div id="auth-screen">
+  <div class="auth-card">
+    <h1>ZoneDrop</h1>
+    <p>Real-time location map tester</p>
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-login"  onclick="switchTab('login')">Login</button>
+      <button class="tab-btn"        id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+    <div id="name-field" style="display:none">
+      <label>Full Name</label><input type="text" id="name" placeholder="Jane Doe" />
+    </div>
+    <label>Email</label><input type="email" id="email" placeholder="jane@example.com" />
+    <label>Password</label><input type="password" id="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAuth()" />
+    <button class="btn-primary" id="auth-btn" onclick="doAuth()">Login</button>
+    <div id="auth-error"></div>
+  </div>
 </div>
-<script src="/app.js"></script>
+
+<div id="app">
+  <header>
+    <div class="hdr-left">
+      <span class="app-title">ZoneDrop</span>
+      <span class="user-chip">Logged in as <span id="hdr-user">–</span> &nbsp;·&nbsp; ID: <span id="hdr-uid">–</span></span>
+    </div>
+    <div class="hdr-right">
+      <span class="ws-badge"><span class="dot" id="ws-dot"></span><span id="ws-label">Disconnected</span></span>
+      <button class="btn-xs bg-gray" onclick="logout()">Logout</button>
+    </div>
+  </header>
+  <div id="ctrl-strip">
+    <div class="ctrl-inp-group"><span>Lat override</span><input class="ctrl-inp" id="ctrl-lat" placeholder="auto (GPS)" /></div>
+    <div class="ctrl-inp-group"><span>Lng override</span><input class="ctrl-inp" id="ctrl-lng" placeholder="auto (GPS)" /></div>
+    <div class="ctrl-inp-group"><span>Interval ms</span><input class="ctrl-inp" id="ctrl-interval" value="3000" style="width:80px" /></div>
+    <div class="ctrl-inp-group"><span>Radius km</span><input class="ctrl-inp" id="ctrl-radius" value="5" style="width:70px" /></div>
+    <div class="ctrl-divider"></div>
+    <button class="btn-xs bg-green"  id="btn-connect"    onclick="connectWS()">Connect WS</button>
+    <button class="btn-xs bg-red"    id="btn-disconnect" onclick="disconnectWS()" disabled>Disconnect</button>
+    <button class="btn-xs bg-purple" id="btn-start"      onclick="startTracking()" disabled>Start Tracking</button>
+    <button class="btn-xs bg-gray"   id="btn-stop"       onclick="stopTracking()"  disabled>Stop</button>
+    <button class="btn-xs bg-gray"   onclick="sendOnce()">Send Once</button>
+    <button class="btn-xs bg-gray"   onclick="searchNearby()">Search Nearby</button>
+    <button class="btn-xs bg-gray"   onclick="clearLogs()">Clear Logs</button>
+    <div class="loc-info">GPS: <span id="loc-badge">waiting…</span> &nbsp;|&nbsp; Lat: <span id="cur-lat">–</span> &nbsp;Lng: <span id="cur-lng">–</span></div>
+  </div>
+  <div id="body">
+    <div id="map-wrap">
+      <div id="map"></div>
+      <div id="map-legend">
+        <div class="leg-row"><div class="leg-dot" style="background:#a78bfa"></div> You</div>
+        <div class="leg-row"><div class="leg-dot" style="background:#4ade80"></div> Other users</div>
+        <div class="leg-row"><div class="leg-dot" style="background:#fbbf24"></div> Nearby users</div>
+      </div>
+    </div>
+    <div id="side">
+      <div class="tab-bar">
+        <button class="log-tab active" data-tab="nearby-tab" onclick="switchLogTab('nearby-tab')">Nearby</button>
+        <button class="log-tab"        data-tab="all-tab"    onclick="switchLogTab('all-tab')">All</button>
+        <button class="log-tab"        data-tab="sent-tab"   onclick="switchLogTab('sent-tab')">Sent</button>
+        <button class="log-tab"        data-tab="system-tab" onclick="switchLogTab('system-tab')">System</button>
+      </div>
+      <div class="tab-pane active" id="nearby-tab">
+        <div id="nearby-list"><div id="nearby-empty">No nearby users yet.<br>Connect WS and start tracking.</div></div>
+      </div>
+      <div class="tab-pane" id="all-tab"><div class="log" id="log-all"></div></div>
+      <div class="tab-pane" id="sent-tab"><div class="log" id="log-sent"></div></div>
+      <div class="tab-pane" id="system-tab"><div class="log" id="log-sys"></div></div>
+      <div class="side-count" id="side-count">0 events</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+<script>
+let authToken=null,currentUser=null,stompClient=null,trackingTimer=null,currentLat=null,currentLng=null,sentCount=0,sysCount=0,mode='login';
+let map=null,myMarker=null,myCircle=null,userMarkers={},nearbyUserIds=new Set();
+
+function switchTab(t){mode=t;document.getElementById('tab-login').classList.toggle('active',t==='login');document.getElementById('tab-signup').classList.toggle('active',t==='signup');document.getElementById('name-field').style.display=t==='signup'?'block':'none';document.getElementById('auth-btn').textContent=t==='login'?'Login':'Create Account';document.getElementById('auth-error').textContent='';}
+
+async function doAuth(){
+  const email=document.getElementById('email').value.trim(),password=document.getElementById('password').value,name=document.getElementById('name').value.trim(),errEl=document.getElementById('auth-error'),btn=document.getElementById('auth-btn');
+  if(!email||!password){errEl.textContent='Email and password required.';return;}
+  if(mode==='signup'&&!name){errEl.textContent='Name required.';return;}
+  btn.disabled=true;btn.textContent='Please wait…';errEl.textContent='';
+  try{
+    const url=mode==='login'?'/auth/login':'/auth/signup',body=mode==='login'?{email,password}:{name,email,password};
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!res.ok){errEl.textContent=`Error ${res.status}: ${await res.text()||res.statusText}`;return;}
+    const data=await res.json();authToken=data.token;currentUser=data.user;
+    document.getElementById('auth-screen').style.display='none';document.getElementById('app').style.display='flex';
+    document.getElementById('hdr-user').textContent=currentUser.name||currentUser.email;document.getElementById('hdr-uid').textContent=currentUser.id;
+    initMap();requestLocation();sysLog(`Authenticated as ${currentUser.name} (id=${currentUser.id})`);
+  }catch(e){errEl.textContent='Network error: '+e.message;}
+  finally{btn.disabled=false;btn.textContent=mode==='login'?'Login':'Create Account';}
+}
+
+function logout(){disconnectWS();if(map){map.remove();map=null;}userMarkers={};nearbyUserIds.clear();authToken=null;currentUser=null;document.getElementById('auth-screen').style.display='flex';document.getElementById('app').style.display='none';}
+
+function initMap(){map=L.map('map',{zoomControl:true}).setView([20,0],2);L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',subdomains:'abcd',maxZoom:19}).addTo(map);}
+
+function makeIcon(cls){return L.divIcon({className:'',html:`<div class="${cls}">●</div>`,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-16]});}
+
+function updateMyMarker(lat,lng){
+  if(!map)return;const radiusKm=parseFloat(document.getElementById('ctrl-radius').value)||5;
+  if(!myMarker){myMarker=L.marker([lat,lng],{icon:makeIcon('mk-me'),zIndexOffset:1000}).bindPopup('').addTo(map);}else{myMarker.setLatLng([lat,lng]);}
+  myMarker.getPopup().setContent(`<b style="color:#a78bfa">You</b><br>${currentUser.name}<br><small style="color:#64748b">${lat.toFixed(5)}, ${lng.toFixed(5)}</small>`);
+  if(!myCircle){myCircle=L.circle([lat,lng],{radius:radiusKm*1000,color:'#f59e0b',fillColor:'#f59e0b',fillOpacity:.05,weight:1,dashArray:'5,5'}).addTo(map);}else{myCircle.setLatLng([lat,lng]);myCircle.setRadius(radiusKm*1000);}
+}
+
+function updateUserMarker(userId,lat,lng,name,distanceKm){
+  if(!map||userId===currentUser.id)return;const isNearby=nearbyUserIds.has(userId);const icon=makeIcon(isNearby?'mk-nearby':'mk-user');
+  const popup=`<b style="color:${isNearby?'#fbbf24':'#4ade80'}">${name||'User '+userId}</b><br><small>ID: ${userId}</small><br><small style="color:#64748b">${lat.toFixed(5)}, ${lng.toFixed(5)}</small>${distanceKm!=null?`<br><small style="color:#f59e0b">⬤ ${distanceKm.toFixed(2)} km away</small>`:''}`;
+  if(userMarkers[userId]){userMarkers[userId].setLatLng([lat,lng]).setIcon(icon).getPopup().setContent(popup);}else{userMarkers[userId]=L.marker([lat,lng],{icon}).bindPopup(popup).addTo(map);}
+}
+
+function refreshNearbyMarkers(list){const newIds=new Set(list.map(u=>u.userId));const changed=new Set([...nearbyUserIds,...newIds]);nearbyUserIds=newIds;changed.forEach(uid=>{if(uid===currentUser.id)return;const m=userMarkers[uid];if(!m)return;m.setIcon(makeIcon(nearbyUserIds.has(uid)?'mk-nearby':'mk-user'));});}
+
+function requestLocation(){
+  const badge=document.getElementById('loc-badge');if(!navigator.geolocation){badge.textContent='not supported';return;}badge.textContent='requesting…';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    currentLat=pos.coords.latitude;currentLng=pos.coords.longitude;badge.textContent='granted ✓';badge.className='ok';
+    document.getElementById('cur-lat').textContent=currentLat.toFixed(5);document.getElementById('cur-lng').textContent=currentLng.toFixed(5);
+    sysLog(`GPS granted — ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`);
+    if(map){map.setView([currentLat,currentLng],14);updateMyMarker(currentLat,currentLng);}
+    navigator.geolocation.watchPosition(p=>{currentLat=p.coords.latitude;currentLng=p.coords.longitude;document.getElementById('cur-lat').textContent=currentLat.toFixed(5);document.getElementById('cur-lng').textContent=currentLng.toFixed(5);if(map)updateMyMarker(currentLat,currentLng);},null,{enableHighAccuracy:true,maximumAge:5000});
+  },err=>{badge.textContent='denied';sysLog('GPS denied: '+err.message,'error');},{enableHighAccuracy:true});
+}
+
+function getCoords(){return{lat:parseFloat(document.getElementById('ctrl-lat').value)||currentLat,lng:parseFloat(document.getElementById('ctrl-lng').value)||currentLng};}
+
+function connectWS(){
+  if(stompClient&&stompClient.connected)return;sysLog('Connecting to /ws-zonedrop…');
+  stompClient=new StompJs.Client({webSocketFactory:()=>new SockJS('/ws-zonedrop'),connectHeaders:{Authorization:'Bearer '+authToken},reconnectDelay:0,
+    onConnect:()=>{setWsStatus(true);sysLog('STOMP connected ✓');
+      stompClient.subscribe('/topic/locations/all',msg=>{const d=JSON.parse(msg.body);updateUserMarker(d.userId,d.latitude,d.longitude,null,null);logEntry('log-all','all',`<span class="tl">/all</span> uid=${d.userId} · ${d.latitude.toFixed(5)}, ${d.longitude.toFixed(5)}`);});
+      stompClient.subscribe('/topic/location/'+currentUser.id,msg=>{const d=JSON.parse(msg.body);logEntry('log-all','location',`<span class="tl">/location/${currentUser.id}</span> ${d.latitude.toFixed(5)}, ${d.longitude.toFixed(5)}`);});
+      stompClient.subscribe('/topic/nearby/'+currentUser.id,msg=>{const list=JSON.parse(msg.body);if(!Array.isArray(list))return;refreshNearbyMarkers(list);list.forEach(u=>{if(u.latitude!=null)updateUserMarker(u.userId,u.latitude,u.longitude,u.name,u.distanceKm);});renderNearbyList(list);logEntry('log-all','nearby',`<span class="tl">/nearby/${currentUser.id}</span> ${list.length} user(s): `+(list.length?list.map(u=>`${u.name||u.userId}(${u.distanceKm?u.distanceKm.toFixed(2)+'km':'?'})`).join(', '):'none'));if(list.length>0)switchLogTab('nearby-tab');});
+      document.getElementById('btn-connect').disabled=true;document.getElementById('btn-disconnect').disabled=false;document.getElementById('btn-start').disabled=false;},
+    onDisconnect:()=>{setWsStatus(false);sysLog('STOMP disconnected');document.getElementById('btn-connect').disabled=false;document.getElementById('btn-disconnect').disabled=true;document.getElementById('btn-start').disabled=true;document.getElementById('btn-stop').disabled=true;},
+    onStompError:f=>sysLog('STOMP error: '+(f.headers?.message||JSON.stringify(f)),'error'),
+    onWebSocketError:e=>sysLog('WS error: '+(e?.message||e),'error')});
+  stompClient.activate();
+}
+
+function disconnectWS(){stopTracking();if(stompClient){stompClient.deactivate();stompClient=null;}}
+function setWsStatus(c){document.getElementById('ws-dot').className='dot'+(c?' on':'');document.getElementById('ws-label').textContent=c?'Connected':'Disconnected';document.getElementById('ws-label').style.color=c?'#22c55e':'#ef4444';}
+
+function sendLocationUpdate(){
+  if(!stompClient||!stompClient.connected)return;const{lat,lng}=getCoords();
+  if(lat==null||lng==null||isNaN(lat)||isNaN(lng)){sysLog('No coordinates — grant GPS or use override fields.','error');return;}
+  stompClient.publish({destination:'/app/location.update',body:JSON.stringify({userId:currentUser.id,latitude:lat,longitude:lng})});
+  sentCount++;logEntry('log-sent','sent',`<span class="tl">→ /location.update</span> ${lat.toFixed(5)}, ${lng.toFixed(5)}`);updateMyMarker(lat,lng);
+}
+function sendOnce(){if(!stompClient||!stompClient.connected){sysLog('Connect WS first.','error');return;}sendLocationUpdate();}
+function startTracking(){if(trackingTimer)return;const interval=parseInt(document.getElementById('ctrl-interval').value)||3000;sendLocationUpdate();trackingTimer=setInterval(sendLocationUpdate,interval);document.getElementById('btn-start').disabled=true;document.getElementById('btn-stop').disabled=false;sysLog(`Auto-tracking started (every ${interval} ms)`);}
+function stopTracking(){if(trackingTimer){clearInterval(trackingTimer);trackingTimer=null;}document.getElementById('btn-start').disabled=stompClient?.connected?false:true;document.getElementById('btn-stop').disabled=true;}
+function searchNearby(){if(!stompClient||!stompClient.connected){sysLog('Connect WS first.','error');return;}const radius=parseFloat(document.getElementById('ctrl-radius').value)||5.0;stompClient.publish({destination:'/app/nearby.search',body:JSON.stringify({userId:currentUser.id,radiusKm:radius})});sysLog(`Sent nearby.search (radius=${radius} km)`);}
+
+function renderNearbyList(list){
+  const container=document.getElementById('nearby-list'),emptyEl=document.getElementById('nearby-empty');
+  container.querySelectorAll('.nearby-card').forEach(el=>el.remove());
+  if(!list.length){emptyEl.style.display='block';return;}emptyEl.style.display='none';
+  list.forEach(u=>{const card=document.createElement('div');card.className='nearby-card';card.innerHTML=`<div class="nc-name">${u.name||'User '+u.userId}</div><div class="nc-dist">${u.distanceKm!=null?u.distanceKm.toFixed(2)+' km away':'distance unknown'}</div><div class="nc-coord">${u.latitude!=null?u.latitude.toFixed(5)+', '+u.longitude.toFixed(5):''}</div>`;card.onclick=()=>{const m=userMarkers[u.userId];if(m&&map){map.setView(m.getLatLng(),15);m.openPopup();}};container.appendChild(card);});
+}
+
+function nowTs(){return new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+function logEntry(containerId,cls,html){const el=document.getElementById(containerId);if(!el)return;const div=document.createElement('div');div.className='log-entry '+cls;div.innerHTML=`<span class="ts">${nowTs()}</span>${html}`;el.appendChild(div);el.scrollTop=el.scrollHeight;sysCount++;document.getElementById('side-count').textContent=sysCount+' events';}
+function sysLog(msg,cls='system'){logEntry('log-sys',cls,msg);}
+function clearLogs(){['log-all','log-sent','log-sys'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});sysCount=0;sentCount=0;document.getElementById('side-count').textContent='0 events';}
+function switchLogTab(id){document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.log-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));const pane=document.getElementById(id);if(pane)pane.classList.add('active');}
+</script>
 </body>
 </html>
